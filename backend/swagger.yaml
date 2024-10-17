@@ -1,0 +1,677 @@
+openapi: 3.0.0
+info:
+  title: Slim-mom-api
+  description: The backend of slim mom app.
+  version: 1.0.0
+servers:
+  - url: https://slim-mom-api.onrender.com/api/
+    description: Slim mom backend
+  - url: http://localhost:3500/api
+    description: Local development server
+paths:
+  /users/signup:
+    post:
+      tags:
+        - User endpoints
+      summary: User signup.
+      description: Register user into database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        201:
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupResponse'
+        400:
+          description: Bad request
+          content: {}
+        409:
+          description: Conflict! Email already taken!
+          content: {}
+  /users/signin:
+    post:
+      tags:
+        - User endpoints
+      summary: User signin.
+      description: Let the user access the app.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SigninRequest'
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SigninResponse'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized access!
+          content: {}
+  /users/logout:
+    get:
+      tags:
+        - User endpoints
+      summary: User logout.
+      description: Logs the user out.
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LogoutResponse'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized access!
+          content: {}
+  /products/search:
+    get:
+      summary: Search for products 
+      description: Search for products using q, page and limit
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      tags: 
+        - Products endpoints
+      parameters:
+        - name: q
+          in: query
+          description: The keyword you want to search
+          required: false
+          schema:
+            type: string
+            example: "egg"
+        - name: page
+          in: query
+          description: The default value is 1
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          description: The option to limit the total search results
+          required: false
+          schema:
+            type: integer
+            default: 25
+      responses:
+        200:
+          description: A list of matching products
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/ProductsResponse'
+        500:
+          description: Server Error!
+          content: {}
+  /entries:
+    get:
+      tags: 
+        - Entries Endpoints
+      summary: Fetch all diary entries.
+      description: Fetch all user's entries
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/FetchEntries'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized access!
+          content: {}
+    post:
+      tags:
+        - Entries Endpoints
+      summary: Save entry to database
+      description: Add diary entry
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#components/schemas/AddEntriesRequest'
+
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#components/schemas/AddEntriesResponse'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized access
+          content: {}
+  /entries/{entryDate}:
+    get:
+      summary: Search for entries
+      description: Search entries by date
+      security:
+        - Bearer: []
+      tags:
+        - Entries Endpoints
+      parameters:
+        - name: entryDate
+          in:  path
+          #description: The date you want to search (format: YYYY-MM-DD)
+          required: true
+          schema:
+            type: string
+            format: date
+            example: "2024-10-06"
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FetchEntries'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized access!
+          content: {}
+        500:
+          description: Server Error!
+          content: {}
+  /entries/{entryId}:
+    delete:
+      summary: Delete an entry by ID.
+      description: Delete an entry by it's ID
+      produces:
+        - application/json
+      security:
+        - Bearer: []
+      tags: 
+        - Entries Endpoints
+      parameters:
+        - name: entryId
+          in: path
+          description: The ID of the entry you want to delete
+          required: true
+          schema:
+            type: string
+            example: 67028e04b14495ebc18aabe8
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeleteEntry'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized access!
+          content: {}
+        500:
+          description: Server Error!
+          content: {}
+  /calorieIntake/public:
+    post:
+      tags: 
+        - Calorie Intake endpoints
+      summary: Shows the calorie count and foods to avoid
+      description: Data is not being save in the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalorieIntakeRequest'
+          
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalorieIntakeResponsePublic'
+        400:
+          description: Bad request
+          content: {}
+        500: 
+          description: Internal server error!
+          content: {}
+  /calorieIntake/private:
+    post:
+      tags: 
+        - Calorie Intake endpoints
+      security:
+        - Bearer: []
+      summary: Shows the calorie count and foods to avoid
+      description: Data is saved in the database
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CalorieIntakeRequest'
+          
+      responses:
+        200:
+          description: Successful Operation
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CalorieIntakeResponsePrivate'
+        400:
+          description: Bad request
+          content: {}
+        401:
+          description: Unauthorized Access!
+          content: {}
+        500: 
+          description: Internal server error!
+          content: {}
+  
+components:
+  securitySchemes:
+    Bearer:
+      type: 'http'
+      scheme: 'bearer'
+      bearerFormat: 'JWT'
+  schemas:
+    SignupRequest:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          description: User's name
+          example: juan dela cruz
+        email:
+          type: string
+          description: User's email
+          example: jdcruz123@gmail.com
+        password: 
+          type: string
+          description: User's password
+          example: password
+    SignupResponse: 
+        type: object
+        required:
+          - _id
+          - name
+          - email
+        properties:
+          _id: 
+            type: string
+            description: User's id
+            example: 670a457fc360b982199aa704
+          email:
+            type: string
+            description: User's email
+            example: jdcruz123@gmail.com
+          name:
+            type: string
+            description: User's name
+            example: juan dela cruz
+    SigninRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          description: User's email
+          example: jdcruz123@gmail.com
+        password: 
+          type: string
+          description: User's password
+          example: password
+    SigninResponse:
+      type: object
+      required:
+        - _id
+        - name
+        - email
+        - token
+      properties:
+        _id: 
+          type: string
+          description: User's id
+          example: 670a457fc360b982199aa704
+        email:
+          type: string
+          description: User's email
+          example: jdcruz123@gmail.com
+        name:
+          type: string
+          description: User's name
+          example: juan dela cruz
+        token:
+          type: string
+          description: token
+          example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY3MGE0NTdmYzM2MGI5ODIxOTlhYTcwNCIsImlhdCI6MTcyODcyOTA0MiwiZXhwIjoxNzI4ODE1NDQyfQ.-4WoKonucFe9fjfdRJO2A1NhmegjV80JWOtrfFFeNgo
+    LogoutResponse:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Logged out successfully"
+    ProductsResponse:
+      type: object
+      properties:
+        _id:
+          type: number
+          description: Product's ID
+          example: 5d51694802b2373622ff5533
+        categories:
+          type: string
+          description: Product's category
+          example: eggs
+        weight: 
+          type: number
+          description: Product's weight
+          example: 100
+        title:
+          type: string
+          description: Product's name
+          example: goose egg
+        calories:
+          type: number
+          description: Product's calorie count
+          example: 185
+        groupBloodNotAllowed:
+          type: array
+          items:
+            oneOf:
+              - type: boolean
+              - type: null
+          example: [null, true, false, false, false]
+    FetchEntries:
+      type: object
+      properties:
+        food:
+          type: object
+          properties:
+            _id:
+              type: string
+              description: Food's ID
+              example: 5d51694802b2373622ff5541
+            categories:
+              type: string
+              description: Food's Category
+              example: eggs
+            weight: 
+              type: number
+              description: Food's Weight
+              example: 100
+            title:
+              type: string
+              description: Food's Title
+              example: duck egg
+            calories:
+              type: number
+              description: Food's calorie count
+              example: 185
+            groupBloodNotAllowed:
+              type: array
+              items:
+                oneOf:
+                  - type: boolean
+                  - type: null
+              example: [null, true, false, false, false]
+        _id:
+          type: string
+          description: ID of the entry
+          example: 670a9b0f3df3eb80564a1551
+        owner:
+          type: string
+          description: ID of user who owns the entry
+          example: 670a457fc360b982199aa704
+        createdAt: 
+          type: date
+          description: Date and time when the entry was created
+          example: 2024-10-12T16:17:45.811Z
+    AddEntriesRequest:
+      type: object
+      required:
+        -food
+      properties:
+        _id:
+          type: string
+          description: Food's ID
+          example: 670a9b0f3df3eb80564a1551
+        categories:
+          type: string
+          description: Food's Category
+          example: eggs
+        weight: 
+          type: number
+          description: Food's Weight
+          example: 100
+        title:
+          type: string
+          description: Food's Title
+          example: duck egg
+        calories:
+          type: number
+          description: Food's calorie count
+          example: 185
+        groupBloodNotAllowed:
+          type: array
+          items:
+            oneOf:
+              - type: boolean
+              - type: null
+          example: [null, true, false, false, false]
+        grams:
+          type: number
+          description: grams of the food eaten
+          example: 100
+    AddEntriesResponse:
+      type: object
+      required:
+        -food
+      properties:
+        food:
+          type: object
+          properties:
+            _id:
+              type: string
+              description: Food's ID
+              example: 670a9b0f3df3eb80564a1551
+            categories:
+              type: string
+              description: Food's Category
+              example: eggs
+            weight: 
+              type: number
+              description: Food's Weight
+              example: 100
+            title:
+              type: string
+              description: Food's Title
+              example: duck egg
+            calories:
+              type: number
+              description: Food's calorie count
+              example: 185
+            groupBloodNotAllowed:
+              type: array
+              items:
+                # oneOf:
+                #   - type: boolean
+                #   - type: null
+              example: [null, true, false, false, false]
+            _id:
+              type: string
+              description: ID of the entry
+              example: 670a9b0f3df3eb80564a1551
+            grams:
+              type: number
+              description: grams of the food eaten
+              example: 100
+        owner:
+          type: string
+          description: ID of user who owns the entry
+          example: 670a457fc360b982199aa704
+        createdAt: 
+          type: date
+          description: Date and time when the entry was created
+          example: 2024-10-12T16:17:45.811Z
+    DeleteEntry:
+      type: object
+      properties:
+        message:
+          type: string
+          example: "Entry Deleted"
+    CalorieIntakeRequest:
+      type: object
+      required:
+        - height
+        - currentWeight
+        - age
+        - desiredWeight
+        - bloodType
+      properties:
+        height:
+          type: number
+          description: User's height
+          example: 165
+        currentWeight:
+          type: number
+          description: User's current weight
+          example: 100
+        age: 
+          type: number
+          description: User's current age
+          example: 25
+        desiredWeight:
+          type: number
+          description: User's desired weight
+          example: 60
+        bloodType:
+          type: number
+          description: User's blood type
+          example: 2
+    CalorieIntakeResponsePrivate:
+      type: object
+      required:
+        - height
+        - currentWeight
+        - age
+        - desiredWeight
+        - bloodType
+        - owner
+        - foodsToAvoid
+        - calorieIntake
+      properties:
+        height:
+          type: number
+          description: User's height
+          example: 165
+        currentWeight:
+          type: number
+          description: User's current weight
+          example: 100
+        age: 
+          type: number
+          description: User's current age
+          example: 25
+        desiredWeight:
+          type: number
+          description: User's desired weight
+          example: 60
+        bloodType:
+          type: number
+          description: User's blood type
+          example: 2
+        owner:
+          type: string
+          description: User's Id
+          example: 670a457fc360b982199aa704
+        foodsToAvoid:
+          type: array
+          items:
+            type: string
+            description: list of food to avoid
+            example: ["dairy","flour","meat"]
+        calorieIntake:
+          type: number
+          description: Calorie intake
+          example: 1345.25
+    CalorieIntakeResponsePublic:
+      type: object
+      required:
+        - height
+        - currentWeight
+        - age
+        - desiredWeight
+        - bloodType
+        - foodsToAvoid
+        - calorieIntake
+      properties:
+        height:
+          type: number
+          description: User's height
+          example: 165
+        currentWeight:
+          type: number
+          description: User's current weight
+          example: 100
+        age: 
+          type: number
+          description: User's current age
+          example: 25
+        desiredWeight:
+          type: number
+          description: User's desired weight
+          example: 60
+        bloodType:
+          type: number
+          description: User's blood type
+          example: 2
+        foodsToAvoid:
+          type: array
+          items:
+            type: string
+            description: list of food to avoid
+            example: ["dairy","flour","meat"]
+        calorieIntake:
+          type: number
+          description: Calorie intake
+          example: 1345.25
